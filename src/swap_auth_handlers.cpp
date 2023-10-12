@@ -159,6 +159,7 @@ namespace sdk {
         : auth_handler_impl(session, "create_swap_transaction")
         , m_details(details)
         , m_swap_type(json_get_value(m_details, "swap_type"))
+        , m_receive_address(m_details.at("receive_address"))
         , m_is_signed(false)
     {
     }
