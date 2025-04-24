@@ -481,7 +481,7 @@ namespace green {
             // Host unblinding: fetch master blinding key
             // Allow the session to handle this request with cached data if it can
             auto [blinding_key, denied] = get_session().get_cached_master_blinding_key();
-            if (!blinding_key.empty() || denied) {
+            if (!blinding_key.empty()) {
                 // We have a cached blinding key or the user has denied access
                 result.emplace("master_blinding_key", std::move(blinding_key)); // Blank if denied
                 handler->resolve_hw_reply(std::move(result));
