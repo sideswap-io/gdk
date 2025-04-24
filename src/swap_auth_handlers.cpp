@@ -150,6 +150,7 @@ namespace green {
     create_swap_transaction_call::create_swap_transaction_call(session& session, const nlohmann::json& details)
         : auth_handler_impl(session, "create_swap_transaction")
         , m_details(details)
+        , m_receive_address(m_details.at("receive_address"))
         , m_is_signed(false)
     {
     }
