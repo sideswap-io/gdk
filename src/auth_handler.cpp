@@ -543,7 +543,11 @@ namespace green {
             // Check if there are any inputs that actually require signing
             auto&& must_sign = [](const auto& in) -> bool { return !in.value("skip_signing", false); };
             const auto& inputs = required_data.at("transaction_inputs");
-            if (std::none_of(inputs.begin(), inputs.end(), must_sign)) {
+
+            // SideSwap: Skip Jade if already signed
+            auto skip_user_sign = required_data.contains("sign_with") && required_data["sign_with"] == nlohmann::json::array({"green-backend"});
+
+            if (std::none_of(inputs.begin(), inputs.end(), must_sign) || skip_user_sign) {
                 // No inputs require signing: return empty sigs for each input
                 result["signatures"] = nlohmann::json::array_t(inputs.size(), std::string());
                 handler->resolve_hw_reply(std::move(result));

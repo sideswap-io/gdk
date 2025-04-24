@@ -686,6 +686,7 @@ namespace green {
             }
         }
         request["is_partial"] = is_partial;
+        request["sign_with"] = m_details["sign_with"];
 
         // We need the inputs, augmented with types, scripts and paths
         std::unique_ptr<Tx> tx;
