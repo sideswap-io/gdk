@@ -200,6 +200,21 @@ impl Account {
     }
 
     pub fn derive_address(&self, is_internal: bool, index: u32) -> Result<BEAddress, Error> {
+        let addr = derive_address(
+            &self.chains[is_internal as usize],
+            index,
+            self.script_type,
+            self.network.id(),
+            self.master_blinding.as_ref(),
+        )?;
+        Ok(addr.0)
+    }
+
+    pub fn derive_address_with_public_key(
+        &self,
+        is_internal: bool,
+        index: u32,
+    ) -> Result<(BEAddress, bitcoin::PublicKey), Error> {
         derive_address(
             &self.chains[is_internal as usize],
             index,
@@ -221,7 +236,7 @@ impl Account {
         acc_store.increment_pointer(is_internal, ignore_gap_limit, gap_limit);
         let account_path = DerivationPath::from(&[(is_internal as u32).into(), pointer.into()][..]);
         let user_path = self.get_full_path(&account_path);
-        let address = self.derive_address(is_internal, pointer)?;
+        let (address, public_key) = self.derive_address_with_public_key(is_internal, pointer)?;
         let (is_blinded, unconfidential_address, blinding_key) = match address {
             BEAddress::Elements(ref a) => {
                 let blinding_key = a.blinding_pubkey.map(|p| p.to_string());
@@ -243,6 +258,7 @@ impl Account {
             is_internal: is_internal,
             is_confidential: is_blinded,
             unconfidential_address: unconfidential_address,
+            public_key,
         })
     }
 
@@ -829,21 +845,22 @@ fn derive_address(
     script_type: ScriptType,
     network_id: NetworkId,
     master_blinding: Option<&MasterBlindingKey>,
-) -> Result<BEAddress, Error> {
+) -> Result<(BEAddress, bitcoin::PublicKey), Error> {
     let child_key = xpub.ckd_pub(&crate::EC, index.into())?;
+    let public_key = child_key.to_pub();
     match network_id {
         NetworkId::Bitcoin(network) => {
-            let address = bitcoin_address(&child_key.to_pub(), script_type, network);
-            Ok(BEAddress::Bitcoin(address))
+            let address = bitcoin_address(&public_key, script_type, network);
+            Ok((BEAddress::Bitcoin(address), public_key.into()))
         }
         NetworkId::Elements(network) => {
             let address = elements_address(
-                &child_key.to_pub(),
+                &public_key,
                 master_blinding.expect("we are in elements but master blinding is None"),
                 script_type,
                 network,
             );
-            Ok(BEAddress::Elements(address))
+            Ok((BEAddress::Elements(address), public_key.into()))
         }
     }
 }

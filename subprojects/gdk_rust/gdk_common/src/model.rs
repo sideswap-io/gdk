@@ -603,6 +603,7 @@ pub struct AddressPointer {
     pub is_confidential: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unconfidential_address: Option<String>,
+    pub public_key: bitcoin::PublicKey,
 }
 
 // This one is simple enough to derive a serializer
